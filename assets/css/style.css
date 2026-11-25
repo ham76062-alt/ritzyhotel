@@ -51,7 +51,7 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:600;line-height:1.15;color:var(
 .topbar .tb-right span{white-space:nowrap}
 
 /* header / nav */
-.site-header{position:sticky;top:0;z-index:60;background:rgba(250,246,239,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.site-header{position:sticky;top:var(--preview-h,44px);z-index:60;background:rgba(250,246,239,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 .site-header .wrap{display:flex;align-items:center;justify-content:space-between;gap:18px;height:74px}
 .wordmark{font-family:var(--serif);font-size:1.7rem;letter-spacing:.14em;font-weight:700;color:var(--ink);line-height:1;white-space:nowrap}
 .wordmark small{display:block;font-family:var(--sans);font-size:.6rem;letter-spacing:.42em;color:var(--gold-dark);font-weight:500;margin-top:3px}
@@ -265,6 +265,7 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:600;line-height:1.15;color:var(
 @media (prefers-reduced-motion:reduce){
   .reveal{opacity:1;transform:none;transition:none}
   html{scroll-behavior:auto}
+  .to-top{transition:none}
 }
 
 /* responsive */
@@ -298,3 +299,36 @@ h1,h2,h3,h4{font-family:var(--serif);font-weight:600;line-height:1.15;color:var(
   .map-frame iframe{height:320px}
   .feat-list{grid-template-columns:1fr}
 }
+
+/* ---- Live preview expiry countdown — pinned to the top while scrolling ---- */
+.preview-bar{position:sticky;top:0;z-index:110;background:#14181d;color:#e8ecf1;font-size:.85rem}
+.preview-bar-inner{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.4rem 1rem;padding-top:.5rem;padding-bottom:.5rem;text-align:center}
+.preview-label{letter-spacing:.14em;text-transform:uppercase;font-weight:700;color:#c7d0d8;font-size:.78rem}
+.preview-count{display:inline-flex;align-items:baseline;gap:.35rem;font-variant-numeric:tabular-nums}
+.preview-num{display:inline-flex;align-items:baseline;gap:.25rem}
+.preview-num b{color:#f4801f;font-size:1.15rem;font-weight:800}
+.preview-num i{font-style:normal;color:#9aa7b1;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em}
+.preview-sep{color:#5c6b76;font-weight:700}
+.preview-note{color:#9aa7b1;font-size:.82rem}
+@media (max-width:640px){
+  .preview-bar-inner{gap:.15rem .6rem}
+  .preview-note{flex-basis:100%}
+}
+.preview-expired{position:fixed;inset:0;z-index:200;background:rgba(10,14,18,.96);display:grid;place-items:center;padding:24px}
+.preview-expired[hidden]{display:none}
+.preview-expired-card{max-width:520px;text-align:center;color:#e8ecf1}
+.preview-expired-card h2{font-family:var(--serif);color:#fff;font-size:2rem;margin-bottom:12px}
+.preview-expired-card p{color:#b9c4cd;margin-top:8px}
+/* Slim on scroll: keep the bar pinned, shrink all the text (nothing hidden) */
+.preview-bar.slim .preview-bar-inner{padding-top:.15rem;padding-bottom:.15rem;gap:.2rem .5rem}
+.preview-bar.slim .preview-label{font-size:.68rem}
+.preview-bar.slim .preview-num b{font-size:.95rem}
+.preview-bar.slim .preview-num i{font-size:.62rem}
+.preview-bar.slim .preview-sep{font-size:.85rem}
+.preview-bar.slim .preview-note{font-size:.72rem}
+
+/* ---- Back to top (small, above the WhatsApp button) ---- */
+.to-top{position:fixed;right:20px;bottom:92px;z-index:70;width:40px;height:40px;border-radius:50%;background:var(--gold);color:#fff;border:1px solid var(--gold-dark);display:grid;place-items:center;cursor:pointer;box-shadow:0 8px 24px rgba(0,0,0,.28);opacity:0;visibility:hidden;transform:translateY(6px);transition:opacity 160ms ease-out,transform 160ms ease-out,visibility 160ms}
+.to-top.show{opacity:1;visibility:visible;transform:translateY(0)}
+.to-top:hover{background:var(--gold-dark)}
+.to-top svg{width:18px;height:18px}

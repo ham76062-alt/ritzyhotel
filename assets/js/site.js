@@ -225,3 +225,74 @@ var RITZY = {
     });
   }
 })();
+
+/* ---- Live preview expiry countdown (7 days) ---- */
+(function () {
+  /* Live preview expiry — change PREVIEW_EXPIRY to move the date, or remove
+     the preview bar and this script to take the countdown off the site. */
+  var PREVIEW_EXPIRY = new Date("2026-12-02T23:59:00Z");
+  var bar = document.getElementById("previewBar");
+  var expired = document.getElementById("previewExpired");
+  /* Keep the sticky header sitting just below the countdown bar, whatever
+     height the bar wraps to (desktop one line, mobile three). */
+  function syncHeaderOffset() {
+    var h = bar ? bar.offsetHeight : 0;
+    document.documentElement.style.setProperty("--preview-h", h + "px");
+  }
+  syncHeaderOffset();
+  window.addEventListener("resize", syncHeaderOffset);
+  /* Slim on scroll: keep the bar pinned, shrink all the text (nothing hidden). */
+  var slim = false;
+  function onScroll() {
+    var shouldSlim = window.scrollY > 40;
+    if (shouldSlim !== slim) {
+      slim = shouldSlim;
+      if (bar) bar.classList.toggle("slim", slim);
+      syncHeaderOffset();
+    }
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+  function pad(n) { return String(n).padStart(2, "0"); }
+  function set(id, v) { var el = document.getElementById(id); if (el) el.textContent = pad(v); }
+  function tick() {
+    var diff = PREVIEW_EXPIRY - Date.now();
+    if (diff <= 0) {
+      if (bar) bar.style.display = "none";
+      if (expired) expired.hidden = false;
+      syncHeaderOffset();
+      return;
+    }
+    var s = Math.floor(diff / 1000);
+    var d = Math.floor(s / 86400); s -= d * 86400;
+    var h = Math.floor(s / 3600); s -= h * 3600;
+    var m = Math.floor(s / 60); s -= m * 60;
+    set("pvDays", d); set("pvHours", h); set("pvMins", m); set("pvSecs", s);
+  }
+  tick();
+  setInterval(tick, 1000);
+})();
+
+/* ---- Back to top (small button above the WhatsApp button) ---- */
+(function () {
+  var btn = document.createElement("button");
+  btn.className = "to-top";
+  btn.type = "button";
+  btn.setAttribute("aria-label", "Back to top");
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5"/><path d="m5 12 7-7 7 7"/></svg>';
+  document.body.appendChild(btn);
+  var shown = false;
+  function onScroll() {
+    var shouldShow = window.scrollY > 300;
+    if (shouldShow !== shown) {
+      shown = shouldShow;
+      btn.classList.toggle("show", shown);
+    }
+  }
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+  btn.addEventListener("click", function () {
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    window.scrollTo({ top: 0, behavior: reduce ? "auto" : "smooth" });
+  });
+})();
