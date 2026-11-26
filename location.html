@@ -20,13 +20,6 @@
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-<div class="preview-bar" id="previewBar" role="timer" aria-label="Live preview expiry countdown">
-  <div class="wrap preview-bar-inner">
-    <span class="preview-label">Live preview expires in</span>
-    <span class="preview-count" id="previewCount"><span class="preview-num"><b id="pvDays">07</b><i>days</i></span><span class="preview-sep">:</span><span class="preview-num"><b id="pvHours">20</b><i>hrs</i></span><span class="preview-sep">:</span><span class="preview-num"><b id="pvMins">46</b><i>min</i></span><span class="preview-sep">:</span><span class="preview-num"><b id="pvSecs">00</b><i>sec</i></span></span>
-    <span class="preview-note">Temporary preview &mdash; taken offline when the timer reaches zero.</span>
-  </div>
-</div>
 <div class="topbar"><div class="wrap">
       <span>Opposite Asawinso Senior High School, Sefwi Asawinso, Western North Region</span>
       <span class="tb-right"><span><a href="tel:0204651919">020 465 1919</a></span><span><a href="mailto:info@ritzyhotelgh.com">info@ritzyhotelgh.com</a></span></span>
@@ -34,7 +27,7 @@
     <header class="site-header"><div class="wrap">
       <a class="wordmark" href="index.html"><span class="r-mark">R</span>ITZY <span style="letter-spacing:.1em">HOTEL</span><small>SEFWI ASAWINSO &middot; GHANA</small></a>
       <button class="nav-toggle" aria-label="Open menu" aria-expanded="false"><span></span><span></span><span></span></button>
-      <nav class="main-nav" aria-label="Main navigation"><a href="index.html">Home</a><a href="about.html">About</a><a href="rooms.html">Accommodation</a><a href="facilities.html">Facilities</a><a href="gallery.html">Gallery</a><a href="location.html" class="active">Location</a><a href="contact.html">Contact</a><a class="btn" href="contact.html#book">Book Your Stay</a></nav>
+      <nav class="main-nav" aria-label="Main navigation"><a href="index.html">Home</a><a href="rooms.html">Rooms</a><a href="facilities.html">Facilities</a><a href="gallery.html">Gallery</a><a href="about.html">About</a><a href="location.html" class="active">Location</a><a href="contact.html">Contact</a><a class="btn" href="contact.html#book">Book Your Stay</a></nav>
     </div></header>
 <main>
 <section class="page-hero"><div class="wrap"><p class="eyebrow">Location</p><h1>Find Ritzy Hotel</h1><p>Opposite Asawinso Senior High School, Sefwi Asawinso, Western North Region, Ghana.</p></div></section>
@@ -81,7 +74,7 @@
         <ul>
           <li><a href="index.html">Home</a></li>
           <li><a href="about.html">About Us</a></li>
-          <li><a href="rooms.html">Accommodation</a></li>
+          <li><a href="rooms.html">Rooms</a></li>
           <li><a href="facilities.html">Facilities</a></li>
           <li><a href="gallery.html">Gallery</a></li>
           <li><a href="location.html">Location</a></li>
@@ -91,9 +84,9 @@
       <div>
         <h4>Rooms</h4>
         <ul>
-          <li><a href="room-standard-single.html">Standard Single — GH&cent;300</a></li>
-          <li><a href="room-standard-deluxe.html">Standard Deluxe — GH&cent;450</a></li>
-          <li><a href="room-executive.html">Executive Room — GH&cent;600</a></li>
+          <li><a href="room-standard-single.html">Standard Single — <span data-price-for="standard-single">GH&cent;300</span></a></li>
+          <li><a href="room-standard-deluxe.html">Standard Deluxe — <span data-price-for="standard-deluxe">GH&cent;450</span></a></li>
+          <li><a href="room-executive.html">Executive Room — <span data-price-for="executive">GH&cent;600</span></a></li>
           <li><a href="rooms.html">All rooms</a></li>
           <li><a href="privacy.html">Privacy Policy</a></li>
           <li><a href="terms.html">Terms &amp; Conditions</a></li>
@@ -114,15 +107,9 @@
     </div>
     <div class="foot-bottom"><div class="wrap">
       <span>&copy; <span id="year">2026</span> Ritzy Hotel, Sefwi Asawinso. All rights reserved.</span>
-      <span><a href="privacy.html">Privacy Policy</a> &nbsp;&middot;&nbsp; <a href="terms.html">Terms &amp; Conditions</a></span>
+      <span><a href="privacy.html">Privacy Policy</a> &nbsp;&middot;&nbsp; <a href="terms.html">Terms &amp; Conditions</a> &nbsp;&middot;&nbsp; <a href="admin.html">Staff login</a></span>
     </div></div></footer>
     <a class="wa-float" href="#" data-wa aria-label="Chat with Ritzy Hotel on WhatsApp"><svg viewBox="0 0 32 32" fill="currentColor"><path d="M16 3C9.4 3 4 8.4 4 15c0 2.4.7 4.6 2 6.5L4 29l7.7-2c1.8 1 3.9 1.5 6 1.5h.3c6.6 0 12-5.4 12-12S22.6 3 16 3zm0 24.5c-1.9 0-3.8-.5-5.4-1.5l-.4-.2-4.6 1.2 1.2-4.4-.3-.4C5.4 20.7 4.9 19 4.9 17.3 4.9 11.2 9.9 6.2 16 6.2S27.1 11.2 27.1 17.3 22.1 27.5 16 27.5zm6.3-8.2c-.3-.2-2-1-2.3-1.1-.3-.1-.5-.2-.8.2-.2.3-.9 1.1-1.1 1.3-.2.2-.4.2-.7.1-.3-.2-1.4-.5-2.7-1.7-1-.9-1.7-2-1.9-2.3-.2-.3 0-.5.1-.7l.5-.6c.2-.2.2-.4.3-.6.1-.2 0-.4 0-.6-.1-.2-.8-1.8-1-2.5-.3-.6-.5-.6-.8-.6h-.6c-.2 0-.6.1-.9.4-.3.3-1.1 1.1-1.1 2.7s1.2 3.1 1.3 3.4c.2.2 2.3 3.6 5.7 5 3.4 1.4 3.4 1 4 .9.6-.1 2-0.8 2.2-1.6.3-.8.3-1.4.2-1.6-.1-.1-.3-.2-.7-.4z"/></svg></a>
+    <script src="assets/js/ritzy-store.js"></script>
     <script src="assets/js/site.js"></script>
-    <div class="preview-expired" id="previewExpired" hidden>
-  <div class="preview-expired-card">
-    <h2>This preview has expired.</h2>
-    <p>This temporary preview of the Ritzy Hotel website was taken offline on 2 December 2026.</p>
-    <p>Contact us for the live website.</p>
-  </div>
-</div>
 </body></html>

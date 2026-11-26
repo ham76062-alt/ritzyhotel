@@ -63,6 +63,54 @@ var RITZY = {
     inp.setAttribute('min', today);
   });
 
+  /* ---- Scroll to the booking form ----
+     Lazy images above the form can still be loading and push it down
+     while a smooth scroll runs, so the first scroll can land short.
+     Re-aim once the layout has settled (900ms) if it is still off. */
+  function scrollToBook(target) {
+    target.scrollIntoView({ behavior: 'smooth' });
+    setTimeout(function () {
+      var top = target.getBoundingClientRect().top;
+      if (top > 120 || top < -120) { target.scrollIntoView({ behavior: 'smooth' }); }
+    }, 900);
+  }
+
+  /* ---- Prices from the staff dashboard (demo store) ---- */
+  /* Room cards, room detail pages and footer links carry a
+     <span data-price-for="room-id"> around the displayed price; booking-form
+     options carry data-room="room-id". When the dashboard changes a price,
+     the public site shows it on the next load. Hardcoded prices stay as
+     the fallback when the store is unavailable. */
+  if (window.RitzyDemo) {
+    var money = function (n) { return 'GH\u20b5' + Number(n).toLocaleString('en-GH'); };
+    window.RitzyDemo.getRooms().forEach(function (r) {
+      document.querySelectorAll('[data-price-for="' + r.id + '"]').forEach(function (el) {
+        el.textContent = money(r.price);
+      });
+      document.querySelectorAll('option[data-room="' + r.id + '"]').forEach(function (opt) {
+        opt.textContent = r.name + ' \u2014 ' + money(r.price) + ' / night';
+      });
+    });
+    document.querySelectorAll('[data-min-price]').forEach(function (el) {
+      el.textContent = money(window.RitzyDemo.getMinPrice());
+    });
+  }
+
+  /* ---- Tonight availability badges (rooms) ----
+     Every room card and room detail page carries an empty
+     <p class="avail-badge" data-avail-for="room-id"> under the price.
+     The store decides tonight: blocked in the calendar, or active
+     bookings covering tonight already filling every room of the type,
+     means "Not available". Plain text only — no background, no border,
+     no padding. Read at page load, so a dashboard change flips the
+     badge on the next load. */
+  document.querySelectorAll('[data-avail-for]').forEach(function (el) {
+    if (!window.RitzyDemo) { return; }
+    var ok = window.RitzyDemo.isAvailableTonight(el.getAttribute('data-avail-for'));
+    el.textContent = ok ? 'Available' : 'Not available';
+    el.classList.add(ok ? 'avail-ok' : 'avail-no');
+  });
+
   /* ---- Booking enquiry forms ---- */
   function fmtDate(v) { return v || 'Not set'; }
 
@@ -109,6 +157,23 @@ var RITZY = {
       if (!f.checkin.value) { return fail('Please choose a check-in date.'); }
       if (!f.checkout.value) { return fail('Please choose a check-out date.'); }
       if (f.checkout.value <= f.checkin.value) { return fail('Check-out must be after check-in.'); }
+      /* Check the room is free, then save the enquiry in the staff dashboard
+         as "New" (no guest is created until staff confirm it). */
+      if (window.RitzyDemo) {
+        var avail = window.RitzyDemo.check(f.room.value, f.checkin.value, f.checkout.value);
+        if (!avail.ok) { return fail(avail.reason); }
+        window.RitzyDemo.addBooking({
+          guest: f.name.value.trim(),
+          phone: f.phone.value.trim(),
+          email: f.email.value.trim(),
+          room: f.room.value,
+          checkin: f.checkin.value,
+          checkout: f.checkout.value,
+          guests: f.guests.value,
+          requests: f.requests.value.trim(),
+          status: 'New'
+        });
+      }
       /* Open WhatsApp with the enquiry, then show the confirmation. */
       window.open(waLink(buildMessage(f)), '_blank');
       var fields = form.querySelector('.form-fields');
@@ -128,13 +193,24 @@ var RITZY = {
     }
   });
 
-  /* ---- Hero availability search -> feeds the booking form ---- */
+  /* ---- Hero availability search -> checks the staff dashboard store,
+     then fills the booking form for the room type the visitor picks ---- */
   var searchForm = document.querySelector('.hero-search');
   if (searchForm) {
-    searchForm.addEventListener('submit', function (ev) {
-      ev.preventDefault();
+    var heroResult = document.getElementById('heroResult');
+    function esc(s) {
+      return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+    function showHeroResult(kind, html) {
+      if (!heroResult) { return; }
+      heroResult.className = 'hero-result show ' + kind;
+      heroResult.innerHTML = html;
+    }
+    function fillBookingForm(roomName) {
       var target = document.querySelector('#book');
-      if (!target) { return; }
+      if (!target) { return null; }
       var bookForm = target.querySelector('.booking-form') || document.querySelector('.booking-form');
       if (bookForm) {
         var map = { checkin: 'checkin', checkout: 'checkout', guests: 'guests', rooms: 'rooms' };
@@ -143,11 +219,64 @@ var RITZY = {
           var dst = bookForm.querySelector('[name="' + map[k] + '"]');
           if (src && dst && src.value) { dst.value = src.value; }
         });
+        if (roomName) {
+          var sel = bookForm.querySelector('[name="room"]');
+          if (sel) { sel.value = roomName; }
+        }
       }
-      target.scrollIntoView({ behavior: 'smooth' });
+      return target;
+    }
+    function continueToBooking(roomName) {
+      var target = fillBookingForm(roomName);
+      if (!target) { return; }
+      scrollToBook(target);
+      var bookForm = target.querySelector('.booking-form') || document.querySelector('.booking-form');
       var nameField = bookForm && bookForm.querySelector('[name="name"]');
-      if (nameField) { setTimeout(function () { nameField.focus({ preventScroll: true }); }, 700); }
+      if (nameField) { setTimeout(function () { nameField.focus({ preventScroll: true }); }, 1700); }
+    }
+    function roomsRequested() {
+      var v = (searchForm.querySelector('[name="rooms"]').value || '1 room');
+      var n = parseInt(v, 10);
+      return isNaN(n) || n < 1 ? 1 : n;
+    }
+    function runHeroCheck() {
+      var checkin = searchForm.querySelector('[name="checkin"]').value;
+      var checkout = searchForm.querySelector('[name="checkout"]').value;
+      if (!checkin) { showHeroResult('no', '<p>Please choose a check-in date.</p>'); return; }
+      if (!checkout) { showHeroResult('no', '<p>Please choose a check-out date.</p>'); return; }
+      var today = new Date().toISOString().split('T')[0];
+      if (checkin < today) { showHeroResult('no', '<p>Check-in cannot be in the past.</p>'); return; }
+      if (checkout <= checkin) { showHeroResult('no', '<p>Check-out must be after check-in.</p>'); return; }
+      var demo = window.RitzyDemo;
+      if (!demo) { continueToBooking(); return; }
+      var rooms = roomsRequested();
+      var nights = demo.nightsBetween(checkin, checkout);
+      var nightWord = nights === 1 ? ' night' : ' nights';
+      var available = demo.checkAll(checkin, checkout, rooms).filter(function (r) { return r.available; });
+      if (available.length) {
+        var html = '';
+        available.forEach(function (r) {
+          html += '<button type="button" class="hero-alt" data-hero-room="' + esc(r.name) + '">' +
+            esc(r.name) + ' is available from ' + esc(demo.prettyDate(checkin)) + ' to ' + esc(demo.prettyDate(checkout)) +
+            ' (' + nights + nightWord + ') — GH₵' + demo.fmt(r.price) + ' / night</button>';
+        });
+        showHeroResult('ok', html);
+        return;
+      }
+      showHeroResult('no', '<p>Sorry — no rooms are available from ' + esc(demo.prettyDate(checkin)) +
+        ' to ' + esc(demo.prettyDate(checkout)) + ' for ' + rooms + (rooms === 1 ? ' room' : ' rooms') +
+        '. Please pick different dates.</p>');
+    }
+    searchForm.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      runHeroCheck();
     });
+    if (heroResult) {
+      heroResult.addEventListener('click', function (ev) {
+        var btn = ev.target.closest('[data-hero-room]');
+        if (btn) { continueToBooking(btn.getAttribute('data-hero-room')); }
+      });
+    }
   }
 
   /* ---- "Book This Room" buttons ---- */
@@ -161,7 +290,7 @@ var RITZY = {
         var sel = bookForm.querySelector('[name="room"]');
         if (sel) { sel.value = room; }
       }
-      target.scrollIntoView({ behavior: 'smooth' });
+      scrollToBook(target);
     });
   });
 
@@ -224,53 +353,6 @@ var RITZY = {
       if (e.key === 'ArrowRight') { show(current + 1); }
     });
   }
-})();
-
-/* ---- Live preview expiry countdown (7 days) ---- */
-(function () {
-  /* Live preview expiry — change PREVIEW_EXPIRY to move the date, or remove
-     the preview bar and this script to take the countdown off the site. */
-  var PREVIEW_EXPIRY = new Date("2026-12-02T23:59:00Z");
-  var bar = document.getElementById("previewBar");
-  var expired = document.getElementById("previewExpired");
-  /* Keep the sticky header sitting just below the countdown bar, whatever
-     height the bar wraps to (desktop one line, mobile three). */
-  function syncHeaderOffset() {
-    var h = bar ? bar.offsetHeight : 0;
-    document.documentElement.style.setProperty("--preview-h", h + "px");
-  }
-  syncHeaderOffset();
-  window.addEventListener("resize", syncHeaderOffset);
-  /* Slim on scroll: keep the bar pinned, shrink all the text (nothing hidden). */
-  var slim = false;
-  function onScroll() {
-    var shouldSlim = window.scrollY > 40;
-    if (shouldSlim !== slim) {
-      slim = shouldSlim;
-      if (bar) bar.classList.toggle("slim", slim);
-      syncHeaderOffset();
-    }
-  }
-  window.addEventListener("scroll", onScroll, { passive: true });
-  onScroll();
-  function pad(n) { return String(n).padStart(2, "0"); }
-  function set(id, v) { var el = document.getElementById(id); if (el) el.textContent = pad(v); }
-  function tick() {
-    var diff = PREVIEW_EXPIRY - Date.now();
-    if (diff <= 0) {
-      if (bar) bar.style.display = "none";
-      if (expired) expired.hidden = false;
-      syncHeaderOffset();
-      return;
-    }
-    var s = Math.floor(diff / 1000);
-    var d = Math.floor(s / 86400); s -= d * 86400;
-    var h = Math.floor(s / 3600); s -= h * 3600;
-    var m = Math.floor(s / 60); s -= m * 60;
-    set("pvDays", d); set("pvHours", h); set("pvMins", m); set("pvSecs", s);
-  }
-  tick();
-  setInterval(tick, 1000);
 })();
 
 /* ---- Back to top (small button above the WhatsApp button) ---- */
